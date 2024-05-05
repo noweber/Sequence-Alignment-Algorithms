@@ -172,19 +172,19 @@ def EfficientSequenceAlignment(X, Y):
     # TODO: Handle the base cases.
     # TODO: If one string has only 1 character, then use the BasicSequenceAlignment.
 
+    # DIVIDE
     # TODO: Split X down the middle into X_Left and X_Right.
     # TODO: Handle odd-length X strings.
-
     # TODO: Re-calculate the DP table for X_Left and Y as X_Left_Y_Opt.
     # TODO: Re-calculate the DP table for X_Right (reversed) and Y (reversed) as X_Right_Y_Opt.
-
     # TODO: Add X_Left_Y_Opt + X_Right_Y_Opt as X_Y_Opt.
     # TODO: Select the minimum value from X_Y_Opt as Y_Split_Index (the optimal index to split Y at).
 
+    # CONQUER
     # TODO: Recursively call EfficientSequenceAlignment(X_Left, Y from 0 to Y_Split_Index) storing Optimal_Cost_Left, X_Align_Left, and Y_Align_Left.
     # TODO: Recursively call EfficientSequenceAlignment(X_Left, Y from Y_Split_Index Y.Length) storing Optimal_Cost_Right, X_Align_Right, and Y_Align_Right.   
-    
     # TODO: Return Optimal_Cost_Left + Optimal_Cost_Right, X_Align_Left + X_Align_Right, Y_Align_Left + Y_Align_Right (instead of just the Basic solution).
+    
     return BasicSequenceAlignment(X, Y)
 
 if __name__ == "__main__":
