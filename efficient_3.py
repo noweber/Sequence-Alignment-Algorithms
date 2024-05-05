@@ -30,8 +30,8 @@ def process_memory():
     return memory_consumed
 
 """ Provided in project prompt """
-def time_wrapper(): start_time =
-    time.time() call_algorithm()
+def time_wrapper():
+    start_time = time.time() # call_algorithm()
     end_time = time.time()
     time_taken = (end_time - start_time)*1000 return time_taken
 
