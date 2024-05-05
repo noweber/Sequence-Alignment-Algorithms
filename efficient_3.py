@@ -1,6 +1,5 @@
 import sys      # argv
 import time     # time elapsed
-import tracemalloc # mem usage
 import psutil # type: ignore
 
 """ Given Parameters """
@@ -163,24 +162,36 @@ def BasicSequenceAlignment(X, Y):
     # Optimal cost at OPT[M][N]
     return OPT[M][N], X_Align, Y_Align
 
-def GetEfficientBottomUpDynamicProgrammingTable(X, Y):
-    # TODO: Implement this to only keep 2 rows in memory. For now, it just uses the basic solution.
-    return GetBasicBottomUpDynamicProgrammingTable(X, Y)
-
 """ EFFICIENT IMPLEMENTATION """
 def EfficientSequenceAlignment(X, Y):
-    # TODO: Handle the base cases.
-    # TODO: If one string has only 1 character, then use the BasicSequenceAlignment.
 
-    # DIVIDE
+    M = len(X)
+    N = len(Y)
+
+    # BASE CASES:
+    OPT = [[None for j in range(N+1)] for i in range(M+1)]
+    if M == 1 or N == 1:
+        return BasicSequenceAlignment(X, Y)
+    elif M == 0 and N != 0:
+        # TODO: Return ?
+        return DELTA, "_", Y,
+    elif M != 0 and N == 0:
+        # TODO: Return ?
+        return DELTA, X, "_",
+    else:
+        # N and M are both zero.
+        return DELTA, "_", "_"
+
+    # DIVIDE: Figure out wwhich index is optimal to divide Y at.
     # TODO: Split X down the middle into X_Left and X_Right.
     # TODO: Handle odd-length X strings.
     # TODO: Re-calculate the DP table for X_Left and Y as X_Left_Y_Opt.
     # TODO: Re-calculate the DP table for X_Right (reversed) and Y (reversed) as X_Right_Y_Opt.
+    # TODO: Implement this to only keep 2 rows in memory.
     # TODO: Add X_Left_Y_Opt + X_Right_Y_Opt as X_Y_Opt.
     # TODO: Select the minimum value from X_Y_Opt as Y_Split_Index (the optimal index to split Y at).
 
-    # CONQUER
+    # CONQUER: Figure out the optimal cost and aligned strings for the X and Y splits.
     # TODO: Recursively call EfficientSequenceAlignment(X_Left, Y from 0 to Y_Split_Index) storing Optimal_Cost_Left, X_Align_Left, and Y_Align_Left.
     # TODO: Recursively call EfficientSequenceAlignment(X_Left, Y from Y_Split_Index Y.Length) storing Optimal_Cost_Right, X_Align_Right, and Y_Align_Right.   
     # TODO: Return Optimal_Cost_Left + Optimal_Cost_Right, X_Align_Left + X_Align_Right, Y_Align_Left + Y_Align_Right (instead of just the Basic solution).
