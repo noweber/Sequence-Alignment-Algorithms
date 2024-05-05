@@ -192,7 +192,7 @@ if __name__ == "__main__":
 
     startTime = time.time()
 
-    cost, X_Align, Y_Align = BasiSequenceAlignment(X, Y)
+    cost, X_Align, Y_Align = EfficientSequenceAlignment(X, Y)
 
     timeElapsed = (time.time() - startTime) * 1000
     memory = process_memory()
