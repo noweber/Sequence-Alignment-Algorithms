@@ -1,6 +1,5 @@
 import sys      # argv
 import time     # time elapsed
-import tracemalloc # mem usage
 import psutil # type: ignore
 
 """ Given Parameters """
