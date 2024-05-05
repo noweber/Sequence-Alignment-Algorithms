@@ -29,12 +29,6 @@ def process_memory():
     memory_consumed = int(memory_info.rss/1024)
     return memory_consumed
 
-""" Provided in project prompt """
-def time_wrapper():
-    start_time = time.time() # call_algorithm()
-    end_time = time.time()
-    time_taken = (end_time - start_time)*1000 return time_taken
-
 def InitFiles():
     global numBase
     global numIndices
@@ -98,19 +92,107 @@ def PrintOpt(OPT):
             print(OPT[i][j], end=" ")
         print("\n")
 
-""" EFFICIENT IMPLEMENTATION """
-def SequenceAlignment(X, Y):
-    
-    # Optimal cost at OPT[M][N]
-    return 0
+def GetBasicBottomUpDynamicProgrammingTable(X, Y):
+    M = len(X)
+    N = len(Y)
 
+    # M+1 and N+1 -- range is non-inclusive, row/col 0 will be BASE CASE
+    OPT = [[None for j in range(N+1)] for i in range(M+1)]
+
+    """ BOTTOM UP PASS"""
+    # Base Cases
+    for i in range(M+1):
+        OPT[i][0] = i * DELTA
+    for j in range(N+1):
+        OPT[0][j] = j * DELTA
+
+    for i in range(1, M+1):
+        for j in range(1, N+1):
+            OPT[i][j] = min(OPT[i-1][j-1] + ALPHA[X[i-1]][Y[j-1]],
+                            OPT[i-1][j] + DELTA,
+                            OPT[i][j-1] + DELTA)
+    return OPT
+
+""" BASIC IMPLEMENTATION """
+def BasicSequenceAlignment(X, Y):
+   
+    M = len(X)
+    N = len(Y)
+    
+    """ BOTTOM UP PASS"""
+    OPT = GetBasicBottomUpDynamicProgrammingTable(X, Y)
+        
+    """ TOP DOWN PASS """
+    # Follow path that minimized OPT(M-1, N-1)
+    # Prepend to each Align string because working from the end
+    X_Align = ""
+    Y_Align = ""
+
+    # Start from the end and go back
+    i = M
+    j = N
+
+    # OR -- go until at 0, 0
+    # Do not check 0 of OPT -- base case
+    while i > 0 or j > 0:      
+        # KEEP THIS ORDER TO MATCH THE SAMPLE OUTPUTS
+
+        # diag
+        if OPT[i][j] == OPT[i-1][j-1] + ALPHA[X[i-1]][Y[j-1]]:      
+            X_Align = X[i-1] + X_Align
+            Y_Align = Y[j-1] + Y_Align
+            if i > 0:
+                i -=1 
+            if j > 0:
+                j -= 1
+
+        # y gap
+        elif OPT[i][j] == OPT[i][j-1] + DELTA:    
+            X_Align = "_" + X_Align
+            Y_Align = Y[j-1] + Y_Align
+            if j > 0:
+                j -= 1
+
+        # x gap
+        elif OPT[i][j] == OPT[i-1][j] + DELTA:                      
+            X_Align = X[i-1] + X_Align
+            Y_Align = "_" + Y_Align
+            if i > 0:
+                i -= 1
+
+    # Optimal cost at OPT[M][N]
+    return OPT[M][N], X_Align, Y_Align
+
+def GetEfficientBottomUpDynamicProgrammingTable(X, Y):
+    # TODO: Implement this to only keep 2 rows in memory. For now, it just uses the basic solution.
+    return GetBasicBottomUpDynamicProgrammingTable(X, Y)
+
+""" EFFICIENT IMPLEMENTATION """
+def EfficientSequenceAlignment(X, Y):
+    # TODO: Handle the base cases.
+    # TODO: If one string has only 1 character, then use the BasicSequenceAlignment.
+
+    # TODO: Split X down the middle into X_Left and X_Right.
+    # TODO: Handle odd-length X strings.
+
+    # TODO: Re-calculate the DP table for X_Left and Y as X_Left_Y_Opt.
+    # TODO: Re-calculate the DP table for X_Right (reversed) and Y (reversed) as X_Right_Y_Opt.
+
+    # TODO: Add X_Left_Y_Opt + X_Right_Y_Opt as X_Y_Opt.
+    # TODO: Select the minimum value from X_Y_Opt as Y_Split_Index (the optimal index to split Y at).
+
+    # TODO: Recursively call EfficientSequenceAlignment(X_Left, Y from 0 to Y_Split_Index) storing Optimal_Cost_Left, X_Align_Left, and Y_Align_Left.
+    # TODO: Recursively call EfficientSequenceAlignment(X_Left, Y from Y_Split_Index Y.Length) storing Optimal_Cost_Right, X_Align_Right, and Y_Align_Right.   
+    
+    # TODO: Return Optimal_Cost_Left + Optimal_Cost_Right, X_Align_Left + X_Align_Right, Y_Align_Left + Y_Align_Right (instead of just the Basic solution).
+    return BasicSequenceAlignment(X, Y)
 
 if __name__ == "__main__":
     X, Y = InitFiles()
 
     startTime = time.time()
 
-    cost, X_Align, Y_Align = SequenceAlignment(X, Y)
+    cost, X_Align, Y_Align = BasiSequenceAlignment(X, Y)
 
     timeElapsed = (time.time() - startTime) * 1000
     memory = process_memory()
