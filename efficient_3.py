@@ -163,14 +163,13 @@ def BasicSequenceAlignment(X, Y):
     return OPT[M][N], X_Align, Y_Align
 
 def CostOfAlignment(Xs, Ys):
-    """ BASIC -- REMOVE AFTER IMPLEMENTING EFFICIENT """
+    """ BASIC """
     M = len(Xs)
     N = len(Ys)
 
     # M+1 and N+1 -- range is non-inclusive, row/col 0 will be BASE CASE
-    OPT = [[None for j in range(N+1)] for i in range(M+1)]
+    OPT = [[0 for j in range(N+1)] for i in range(M+1)]
 
-    """ BOTTOM UP PASS"""
     # Base Cases
     for i in range(M+1):
         OPT[i][0] = i * DELTA
@@ -179,13 +178,14 @@ def CostOfAlignment(Xs, Ys):
 
     for i in range(1, M+1):
         for j in range(1, N+1):
-            OPT[i][j] = min(OPT[i-1][j-1] + ALPHA[X[i-1]][Y[j-1]],
+            OPT[i][j] = min(OPT[i-1][j-1] + ALPHA[Xs[i-1]][Ys[j-1]],
                             OPT[i-1][j] + DELTA,
                             OPT[i][j-1] + DELTA)
 
-    # TODO: Return the efficient verison
     return OPT[M][:]
-    """ EFFICIENT
+
+    """ EFFICIENT """
+    """
     # Bottom-up pass to find similarity between a half of X (Xs) and a substring of Y (Ys)
     # Fill array from L -> R, column by column
     # Memory efficient by only keeping 2 columns until we get similarity between Xs and Ys at OPT(len(Xs), len(Ys))
@@ -228,13 +228,10 @@ def EfficientSequenceAlignment(X, Y):
         return BasicSequenceAlignment(X, Y)
     elif M == 0 and N != 0:
          # TODO: Return ?
-        return DELTA * N, "_" * N, Y, # If the other string is empty, it may need to return multiple "__"
+        return DELTA, "_", Y, # If the other string is empty, it may need to return multiple "__"
     elif M != 0 and N == 0:
          # TODO: Return ?
-        return DELTA * M, X, "_" * M,
-    #else:
-         # N and M are both zero.
-        #return DELTA, "_", "_"
+        return DELTA, X, "_",
     
     # DIVIDE: Figure out which index is optimal to divide Y at.
     # Find where to divide Y
@@ -253,15 +250,20 @@ def EfficientSequenceAlignment(X, Y):
     CostXL = CostOfAlignment(XL, Y)
 
     # Get cost of aligning XR with all possible substrings of Y ending with YN
+    #CostXR = CostOfAlignment(XR, Y)
     CostXR = CostOfAlignment(XR[::-1], Y[::-1])  # Reversed XR and Y
-
+    CostXR = CostXR[::-1]
+    
     # Add CostXL + CostXR as OptXY.
     # Select the minimum value from OptXY as YSplitIndex (the optimal index to split Y at).
-    OptXY = CostXL + CostXR
+    OptXY = [0] * len(CostXL)
+    for i in range(len(CostXL)):
+        OptXY[i] = CostXL[i] + CostXR[i]
+
     #print(OptXY)
     min = OptXY[0]
     YSplitIndex = 0
-    for i in range(len(OptXY)):
+    for i in range(1, len(OptXY)):
         if OptXY[i] < min:
             min = OptXY[i]
             YSplitIndex = i
@@ -273,7 +275,9 @@ def EfficientSequenceAlignment(X, Y):
     Optimal_Cost_Left, X_Align_Left, Y_Align_Left = EfficientSequenceAlignment(XL, Y[:YSplitIndex])
     Optimal_Cost_Right, X_Align_Right, Y_Align_Right = EfficientSequenceAlignment(XR, Y[YSplitIndex:])
     
-    return Optimal_Cost_Left + Optimal_Cost_Right, X_Align_Left + X_Align_Right, Y_Align_Left + Y_Align_Right
+    result = Optimal_Cost_Left + Optimal_Cost_Right, X_Align_Left + X_Align_Right, Y_Align_Left + Y_Align_Right
+    #print(result)
+    return result
 
 if __name__ == "__main__":
     X, Y = InitFiles()
