@@ -137,7 +137,7 @@ def BasicSequenceAlignment(X, Y):
         # KEEP THIS ORDER TO MATCH THE SAMPLE OUTPUTS
 
         # diag
-        if OPT[i][j] == OPT[i-1][j-1] + ALPHA[X[i-1]][Y[j-1]]:      
+        if i > 0 and j > 0 and OPT[i][j] == OPT[i-1][j-1] + ALPHA[X[i-1]][Y[j-1]]:      
             X_Align = X[i-1] + X_Align
             Y_Align = Y[j-1] + Y_Align
             if i > 0:
@@ -146,14 +146,14 @@ def BasicSequenceAlignment(X, Y):
                 j -= 1
 
         # y gap
-        elif OPT[i][j] == OPT[i][j-1] + DELTA:    
+        elif j > 0 and OPT[i][j] == OPT[i][j-1] + DELTA:    
             X_Align = "_" + X_Align
             Y_Align = Y[j-1] + Y_Align
             if j > 0:
                 j -= 1
 
         # x gap
-        elif OPT[i][j] == OPT[i-1][j] + DELTA:                      
+        elif i > 0 and OPT[i][j] == OPT[i-1][j] + DELTA:                      
             X_Align = X[i-1] + X_Align
             Y_Align = "_" + Y_Align
             if i > 0:
@@ -183,7 +183,9 @@ def CostOfAlignment(Xs, Ys):
                             OPT[i-1][j] + DELTA,
                             OPT[i][j-1] + DELTA)
 
-    """ EFFICIENT """        
+    # TODO: Return the efficient verison
+    return OPT[M][:]
+    """ EFFICIENT
     # Bottom-up pass to find similarity between a half of X (Xs) and a substring of Y (Ys)
     # Fill array from L -> R, column by column
     # Memory efficient by only keeping 2 columns until we get similarity between Xs and Ys at OPT(len(Xs), len(Ys))
@@ -213,63 +215,65 @@ def CostOfAlignment(Xs, Ys):
         # for j in range(len(Ys)):
 
     return OPT[1][:]
+    """
 
 """ EFFICIENT IMPLEMENTATION """
 def EfficientSequenceAlignment(X, Y):
     M = len(X)
     N = len(Y)
 
-
     # BASE CASES:
     OPT = [[None for j in range(N+1)] for i in range(M+1)]
     if M == 1 or N == 1:
         return BasicSequenceAlignment(X, Y)
-    # elif M == 0 and N != 0:
-    #     # TODO: Return ?
-    #     return DELTA, "_", Y,
-    # elif M != 0 and N == 0:
-    #     # TODO: Return ?
-    #     return DELTA, X, "_",
-    # else:
-    #     # N and M are both zero.
-    #     return DELTA, "_", "_"
+    elif M == 0 and N != 0:
+         # TODO: Return ?
+        return DELTA * N, "_" * N, Y, # If the other string is empty, it may need to return multiple "__"
+    elif M != 0 and N == 0:
+         # TODO: Return ?
+        return DELTA * M, X, "_" * M,
+    #else:
+         # N and M are both zero.
+        #return DELTA, "_", "_"
     
+    # DIVIDE: Figure out which index is optimal to divide Y at.
     # Find where to divide Y
     #   - Split X into XL and XR
     #   - If X is odd length, take either floor or ceil for len(X)/2
     XL = ""
     XR = ""
     if len(X) % 2 == 0:
-        XL = X[0:len(X)/2]
-        XR = X[len(X)/2:len(X)]
+        XL = X[:len(X)//2]
+        XR = X[len(X)//2:]
     else:
-        XL = X[0:floor(len(X)/2)]
-        XR = X[floor(len(X)/2):len(X)/2]
+        XL = X[:floor(len(X)/2)]
+        XR = X[floor(len(X)/2):]
     
     # Get cost of aligning XL with all possible substrings of Y starting with Y1
-    
     CostXL = CostOfAlignment(XL, Y)
 
     # Get cost of aligning XR with all possible substrings of Y ending with YN
     CostXR = CostOfAlignment(XR[::-1], Y[::-1])  # Reversed XR and Y
 
-    # Sum them up
-
-    # DIVIDE: Figure out wwhich index is optimal to divide Y at.
-    # TODO: Split X down the middle into X_Left and X_Right.
-    # TODO: Handle odd-length X strings.
-    # TODO: Re-calculate the DP table for X_Left and Y as X_Left_Y_Opt.
-    # TODO: Re-calculate the DP table for X_Right (reversed) and Y (reversed) as X_Right_Y_Opt.
-    # TODO: Implement this to only keep 2 rows in memory.
-    # TODO: Add X_Left_Y_Opt + X_Right_Y_Opt as X_Y_Opt.
-    # TODO: Select the minimum value from X_Y_Opt as Y_Split_Index (the optimal index to split Y at).
+    # Add CostXL + CostXR as OptXY.
+    # Select the minimum value from OptXY as YSplitIndex (the optimal index to split Y at).
+    OptXY = CostXL + CostXR
+    #print(OptXY)
+    min = OptXY[0]
+    YSplitIndex = 0
+    for i in range(len(OptXY)):
+        if OptXY[i] < min:
+            min = OptXY[i]
+            YSplitIndex = i
 
     # CONQUER: Figure out the optimal cost and aligned strings for the X and Y splits.
-    # TODO: Recursively call EfficientSequenceAlignment(X_Left, Y from 0 to Y_Split_Index) storing Optimal_Cost_Left, X_Align_Left, and Y_Align_Left.
-    # TODO: Recursively call EfficientSequenceAlignment(X_Left, Y from Y_Split_Index Y.Length) storing Optimal_Cost_Right, X_Align_Right, and Y_Align_Right.   
-    # TODO: Return Optimal_Cost_Left + Optimal_Cost_Right, X_Align_Left + X_Align_Right, Y_Align_Left + Y_Align_Right (instead of just the Basic solution).
+    # Recursively call EfficientSequenceAlignment(X_Left, Y from 0 to Y_Split_Index) storing Optimal_Cost_Left, X_Align_Left, and Y_Align_Left.
+    # Recursively call EfficientSequenceAlignment(X_Left, Y from Y_Split_Index Y.Length) storing Optimal_Cost_Right, X_Align_Right, and Y_Align_Right.   
+    # Return Optimal_Cost_Left + Optimal_Cost_Right, X_Align_Left + X_Align_Right, Y_Align_Left + Y_Align_Right (instead of just the Basic solution).
+    Optimal_Cost_Left, X_Align_Left, Y_Align_Left = EfficientSequenceAlignment(XL, Y[:YSplitIndex])
+    Optimal_Cost_Right, X_Align_Right, Y_Align_Right = EfficientSequenceAlignment(XR, Y[YSplitIndex:])
     
-    return BasicSequenceAlignment(X, Y)
+    return Optimal_Cost_Left + Optimal_Cost_Right, X_Align_Left + X_Align_Right, Y_Align_Left + Y_Align_Right
 
 if __name__ == "__main__":
     X, Y = InitFiles()
