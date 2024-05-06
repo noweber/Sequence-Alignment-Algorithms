@@ -1,7 +1,7 @@
 import sys      # argv
 import time     # time elapsed
 import psutil # type: ignore
-
+from math import floor
 """ Given Parameters """
 # Gap penalty
 DELTA = 30
@@ -162,25 +162,98 @@ def BasicSequenceAlignment(X, Y):
     # Optimal cost at OPT[M][N]
     return OPT[M][N], X_Align, Y_Align
 
+def CostOfAlignment(Xs, Ys):
+    """ BASIC -- REMOVE AFTER IMPLEMENTING EFFICIENT """
+    M = len(Xs)
+    N = len(Ys)
+
+    # M+1 and N+1 -- range is non-inclusive, row/col 0 will be BASE CASE
+    OPT = [[None for j in range(N+1)] for i in range(M+1)]
+
+    """ BOTTOM UP PASS"""
+    # Base Cases
+    for i in range(M+1):
+        OPT[i][0] = i * DELTA
+    for j in range(N+1):
+        OPT[0][j] = j * DELTA
+
+    for i in range(1, M+1):
+        for j in range(1, N+1):
+            OPT[i][j] = min(OPT[i-1][j-1] + ALPHA[X[i-1]][Y[j-1]],
+                            OPT[i-1][j] + DELTA,
+                            OPT[i][j-1] + DELTA)
+
+    """ EFFICIENT """        
+    # Bottom-up pass to find similarity between a half of X (Xs) and a substring of Y (Ys)
+    # Fill array from L -> R, column by column
+    # Memory efficient by only keeping 2 columns until we get similarity between Xs and Ys at OPT(len(Xs), len(Ys))
+    OPT = [[0 for i in range(2)] for j in range(len(Ys))]   # i columns, j rows
+    
+    yi = 0
+    # Initial values
+    # Empty Ys
+    for j in range(len(Ys)):
+        OPT[j][0] = j * DELTA
+    # Empty Xs
+    OPT[0][1] = DELTA
+
+    # For all substrings of Xs
+    for xi in range(1, len(Xs)):        
+        # Go down column of Ys from 1 and compute opt sol
+        for j in range(len(Ys)):
+            if j == 0:
+                OPT[j][0] = yi * DELTA
+                yi = yi + 1
+
+            OPT[j][1] = min(OPT[j-1][0] + ALPHA[X[xi-1]][Y[j-1]],   # Diag
+                            OPT[j-1][1] + DELTA,                    # Left
+                            OPT[j][0] + DELTA)                      # Down
+        
+        # Shift over 1 index of OPT to prep for new values
+        # for j in range(len(Ys)):
+
+    return OPT[1][:]
+
 """ EFFICIENT IMPLEMENTATION """
 def EfficientSequenceAlignment(X, Y):
-
     M = len(X)
     N = len(Y)
+
 
     # BASE CASES:
     OPT = [[None for j in range(N+1)] for i in range(M+1)]
     if M == 1 or N == 1:
         return BasicSequenceAlignment(X, Y)
-    elif M == 0 and N != 0:
-        # TODO: Return ?
-        return DELTA, "_", Y,
-    elif M != 0 and N == 0:
-        # TODO: Return ?
-        return DELTA, X, "_",
+    # elif M == 0 and N != 0:
+    #     # TODO: Return ?
+    #     return DELTA, "_", Y,
+    # elif M != 0 and N == 0:
+    #     # TODO: Return ?
+    #     return DELTA, X, "_",
+    # else:
+    #     # N and M are both zero.
+    #     return DELTA, "_", "_"
+    
+    # Find where to divide Y
+    #   - Split X into XL and XR
+    #   - If X is odd length, take either floor or ceil for len(X)/2
+    XL = ""
+    XR = ""
+    if len(X) % 2 == 0:
+        XL = X[0:len(X)/2]
+        XR = X[len(X)/2:len(X)]
     else:
-        # N and M are both zero.
-        return DELTA, "_", "_"
+        XL = X[0:floor(len(X)/2)]
+        XR = X[floor(len(X)/2):len(X)/2]
+    
+    # Get cost of aligning XL with all possible substrings of Y starting with Y1
+    
+    CostXL = CostOfAlignment(XL, Y)
+
+    # Get cost of aligning XR with all possible substrings of Y ending with YN
+    CostXR = CostOfAlignment(XR[::-1], Y[::-1])  # Reversed XR and Y
+
+    # Sum them up
 
     # DIVIDE: Figure out wwhich index is optimal to divide Y at.
     # TODO: Split X down the middle into X_Left and X_Right.
