@@ -164,6 +164,7 @@ def BasicSequenceAlignment(X, Y):
 
 def CostOfAlignment(Xs, Ys):
     """ BASIC """
+    """
     M = len(Xs)
     N = len(Ys)
 
@@ -183,6 +184,26 @@ def CostOfAlignment(Xs, Ys):
                             OPT[i][j-1] + DELTA)
 
     return OPT[M][:]
+    """
+    """ EFFICIENT """
+    M = len(Xs)
+    N = len(Ys)
+
+    OPT_A = [j * DELTA for j in range(N+1)]
+    OPT_B = [0 for j in range(N+1)]
+
+    for i in range(1, M+1):
+        OPT_B[0] = i * DELTA
+    
+        for j in range(1, N+1):
+            OPT_B[j] = min(OPT_A[j-1] + ALPHA[Xs[i-1]][Ys[j-1]],
+                            OPT_A[j] + DELTA,
+                            OPT_B[j-1] + DELTA)
+
+        OPT_A = OPT_B
+        OPT_B = [0 for j in range(N+1)]
+
+    return OPT_A
 
     """ EFFICIENT """
     """
