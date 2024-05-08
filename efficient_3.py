@@ -200,8 +200,9 @@ def CostOfAlignment(Xs, Ys):
                             OPT_A[j] + DELTA,
                             OPT_B[j-1] + DELTA)
 
+        OPT_TEMP = OPT_A
         OPT_A = OPT_B
-        OPT_B = [0 for j in range(N+1)]
+        OPT_B = OPT_TEMP
 
     return OPT_A
 
@@ -249,10 +250,10 @@ def EfficientSequenceAlignment(X, Y):
         return BasicSequenceAlignment(X, Y)
     elif M == 0 and N != 0:
          # TODO: Return ?
-        return DELTA, "_", Y, # If the other string is empty, it may need to return multiple "__"
+        return DELTA * N, "_" * N, Y, # If the other string is empty, it may need to return multiple "__"
     elif M != 0 and N == 0:
          # TODO: Return ?
-        return DELTA, X, "_",
+        return DELTA * M, X, "_" * M,
     
     # DIVIDE: Figure out which index is optimal to divide Y at.
     # Find where to divide Y
