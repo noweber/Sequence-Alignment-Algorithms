@@ -163,34 +163,16 @@ def BasicSequenceAlignment(X, Y):
     return OPT[M][N], X_Align, Y_Align
 
 def CostOfAlignment(Xs, Ys):
-    """ BASIC """
-    """
     M = len(Xs)
     N = len(Ys)
 
-    # M+1 and N+1 -- range is non-inclusive, row/col 0 will be BASE CASE
-    OPT = [[0 for j in range(N+1)] for i in range(M+1)]
-
-    # Base Cases
-    for i in range(M+1):
-        OPT[i][0] = i * DELTA
-    for j in range(N+1):
-        OPT[0][j] = j * DELTA
-
-    for i in range(1, M+1):
-        for j in range(1, N+1):
-            OPT[i][j] = min(OPT[i-1][j-1] + ALPHA[Xs[i-1]][Ys[j-1]],
-                            OPT[i-1][j] + DELTA,
-                            OPT[i][j-1] + DELTA)
-
-    return OPT[M][:]
-    """
-    """ EFFICIENT """
-    M = len(Xs)
-    N = len(Ys)
-
-    OPT_A = [j * DELTA for j in range(N+1)]
-    OPT_B = [0 for j in range(N+1)]
+    # Initialize two columns for computing the alignment cost.
+    # This will save space instaed of using an M x N matrix.
+    # Each loop iteration will calculate the values for B using A.
+    # After each iteration, shift the values into A.
+    # If there are no iterations remaining, return A.
+    OPT_A = [j * DELTA for j in range(N + 1)]
+    OPT_B = [0 for j in range(N + 1)]
 
     for i in range(1, M+1):
         OPT_B[0] = i * DELTA
@@ -200,44 +182,10 @@ def CostOfAlignment(Xs, Ys):
                             OPT_A[j] + DELTA,
                             OPT_B[j-1] + DELTA)
 
-        OPT_TEMP = OPT_A
         OPT_A = OPT_B
-        OPT_B = OPT_TEMP
+        OPT_B = [0 for j in range(N + 1)]
 
     return OPT_A
-
-    """ EFFICIENT """
-    """
-    # Bottom-up pass to find similarity between a half of X (Xs) and a substring of Y (Ys)
-    # Fill array from L -> R, column by column
-    # Memory efficient by only keeping 2 columns until we get similarity between Xs and Ys at OPT(len(Xs), len(Ys))
-    OPT = [[0 for i in range(2)] for j in range(len(Ys))]   # i columns, j rows
-    
-    yi = 0
-    # Initial values
-    # Empty Ys
-    for j in range(len(Ys)):
-        OPT[j][0] = j * DELTA
-    # Empty Xs
-    OPT[0][1] = DELTA
-
-    # For all substrings of Xs
-    for xi in range(1, len(Xs)):        
-        # Go down column of Ys from 1 and compute opt sol
-        for j in range(len(Ys)):
-            if j == 0:
-                OPT[j][0] = yi * DELTA
-                yi = yi + 1
-
-            OPT[j][1] = min(OPT[j-1][0] + ALPHA[X[xi-1]][Y[j-1]],   # Diag
-                            OPT[j-1][1] + DELTA,                    # Left
-                            OPT[j][0] + DELTA)                      # Down
-        
-        # Shift over 1 index of OPT to prep for new values
-        # for j in range(len(Ys)):
-
-    return OPT[1][:]
-    """
 
 """ EFFICIENT IMPLEMENTATION """
 def EfficientSequenceAlignment(X, Y):
@@ -302,13 +250,16 @@ def EfficientSequenceAlignment(X, Y):
     return result
 
 if __name__ == "__main__":
+    
     X, Y = InitFiles()
 
     startTime = time.time()
-
+    
+    memory_before_algorithm = process_memory()
     cost, X_Align, Y_Align = EfficientSequenceAlignment(X, Y)
+    memory_after_algorithm = process_memory()
 
     timeElapsed = (time.time() - startTime) * 1000
-    memory = process_memory()
-    Output(str(cost), X_Align, Y_Align, str(timeElapsed), str(memory))
+    #memory = process_memory()
+    Output(str(cost), X_Align, Y_Align, str(timeElapsed), str(abs(memory_after_algorithm - memory_before_algorithm)))
 
