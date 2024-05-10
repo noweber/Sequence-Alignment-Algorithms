@@ -2,6 +2,8 @@ import sys      # argv
 import time     # time elapsed
 import psutil # type: ignore
 from math import floor
+import gc
+
 """ Given Parameters """
 # Gap penalty
 DELTA = 30
@@ -20,13 +22,6 @@ outputFile = sys.argv[2]    # Output file name
 inputLines = []
 numBase = 0
 numIndices = 0
-
-""" Provided in project prompt """
-def process_memory():
-    process = psutil.Process()
-    memory_info = process.memory_info()
-    memory_consumed = int(memory_info.rss/1024)
-    return memory_consumed
 
 def InitFiles():
     global numBase
@@ -82,7 +77,9 @@ def Output(cost, X_Align, Y_Align, Time, Memory):
     file.write(X_Align + "\n")
     file.write(Y_Align + "\n")
     file.write(Time + "\n")
+    #print("CPU Time: " + str(Time))
     file.write(Memory)
+    #print("Memory Consumed: " + str(memory_consumed))
     file.close()
 
 def PrintOpt(OPT):
@@ -120,7 +117,7 @@ def BasicSequenceAlignment(X, Y):
     
     """ BOTTOM UP PASS"""
     OPT = GetBasicBottomUpDynamicProgrammingTable(X, Y)
-        
+    #print(OPT) 
     """ TOP DOWN PASS """
     # Follow path that minimized OPT(M-1, N-1)
     # Prepend to each Align string because working from the end
@@ -182,6 +179,8 @@ def CostOfAlignment(Xs, Ys):
                             OPT_A[j] + DELTA,
                             OPT_B[j-1] + DELTA)
 
+        # Setup for the next iteration be setting OPT_A to OPT_B
+        # Then, clear OPT_B to hold the next iteration's DP values.
         OPT_A = OPT_B
         OPT_B = [0 for j in range(N + 1)]
 
@@ -197,10 +196,9 @@ def EfficientSequenceAlignment(X, Y):
     if M == 1 or N == 1:
         return BasicSequenceAlignment(X, Y)
     elif M == 0 and N != 0:
-         # TODO: Return ?
-        return DELTA * N, "_" * N, Y, # If the other string is empty, it may need to return multiple "__"
+         # Return a gap for each character in the other string.
+        return DELTA * N, "_" * N, Y, # If the other string is not empty, it may need to return multiple "__" gaps.
     elif M != 0 and N == 0:
-         # TODO: Return ?
         return DELTA * M, X, "_" * M,
     
     # DIVIDE: Figure out which index is optimal to divide Y at.
@@ -218,11 +216,39 @@ def EfficientSequenceAlignment(X, Y):
     
     # Get cost of aligning XL with all possible substrings of Y starting with Y1
     CostXL = CostOfAlignment(XL, Y)
+    #print(CostXL)
+    '''OPT_A = [j * DELTA for j in range(N + 1)]
+    OPT_B = [0 for j in range(N + 1)]
+
+    for i in range(1, M+1):
+        OPT_B[0] = i * DELTA
+    
+        for j in range(1, N+1):
+            OPT_B[j] = min(OPT_A[j-1] + ALPHA[X[i-1]][Y[j-1]], OPT_A[j] + DELTA, OPT_B[j-1] + DELTA)
+
+        OPT_A = OPT_B
+        OPT_B = [0 for j in range(N + 1)]
+
+    CostXL = OPT_A
+    '''
 
     # Get cost of aligning XR with all possible substrings of Y ending with YN
     #CostXR = CostOfAlignment(XR, Y)
     CostXR = CostOfAlignment(XR[::-1], Y[::-1])  # Reversed XR and Y
+    '''OPT_A2 = [j * DELTA for j in range(N + 1)]
+    OPT_B2 = [0 for j in range(N + 1)]
+
+    for i in range(1, M+1):
+        OPT_B2[0] = i * DELTA
+    
+        for j in range(1, N+1):
+            OPT_B2[j] = min(OPT_A2[j-1] + ALPHA[X[i-1]][Y[j-1]], OPT_A2[j] + DELTA, OPT_B2[j-1] + DELTA)
+
+        OPT_A2 = OPT_B2
+        OPT_B2 = [0 for j in range(N + 1)]
+    CostXR = OPT_A2'''
     CostXR = CostXR[::-1]
+    #print(CostXR)
     
     # Add CostXL + CostXR as OptXY.
     # Select the minimum value from OptXY as YSplitIndex (the optimal index to split Y at).
@@ -249,17 +275,24 @@ def EfficientSequenceAlignment(X, Y):
     #print(result)
     return result
 
+""" Provided in project prompt """
+def process_memory():
+    process = psutil.Process()
+    memory_info = process.memory_info()
+    memory_consumed = int(memory_info.rss/1024)
+    return memory_consumed
+    
 if __name__ == "__main__":
-    
+    gc.disable()
     X, Y = InitFiles()
-
     startTime = time.time()
-    
-    memory_before_algorithm = process_memory()
+    start_memory = process_memory()
+    #print(start_memory)
     cost, X_Align, Y_Align = EfficientSequenceAlignment(X, Y)
-    memory_after_algorithm = process_memory()
-
+    end_memory = process_memory()
+    #print(end_memory)
     timeElapsed = (time.time() - startTime) * 1000
-    #memory = process_memory()
-    Output(str(cost), X_Align, Y_Align, str(timeElapsed), str(abs(memory_after_algorithm - memory_before_algorithm)))
-
+    memory_consumed = max((end_memory - start_memory), 0)
+    Output(str(cost), X_Align, Y_Align, str(timeElapsed), str(memory_consumed))
+    #Output(str(cost), X_Align, Y_Align, str(timeElapsed), str(end_memory))
+    gc.enable()

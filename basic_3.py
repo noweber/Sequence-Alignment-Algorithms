@@ -1,6 +1,7 @@
 import sys      # argv
 import time     # time elapsed
 import psutil # type: ignore
+import gc
 
 """ Given Parameters """
 # Gap penalty
@@ -20,13 +21,6 @@ outputFile = sys.argv[2]    # Output file name
 inputLines = []
 numBase = 0
 numIndices = 0
-
-""" Provided in project prompt """
-def process_memory():
-    process = psutil.Process()
-    memory_info = process.memory_info()
-    memory_consumed = int(memory_info.rss/1024)
-    return memory_consumed
 
 def InitFiles():
     global numBase
@@ -82,7 +76,9 @@ def Output(cost, X_Align, Y_Align, Time, Memory):
     file.write(X_Align + "\n")
     file.write(Y_Align + "\n")
     file.write(Time + "\n")
+    #print("CPU Time: " + str(Time))
     file.write(Memory)
+    #print("Memory Consumed: " + str(memory_consumed))
     file.close()
 
 def PrintOpt(OPT):
@@ -154,15 +150,23 @@ def SequenceAlignment(X, Y):
     # Optimal cost at OPT[M][N]
     return OPT[M][N], X_Align, Y_Align
 
+""" Provided in project prompt """
+def process_memory():
+    process = psutil.Process()
+    memory_info = process.memory_info()
+    memory_consumed = int(memory_info.rss/1024)
+    return memory_consumed
 
 if __name__ == "__main__":
+    gc.disable()
     X, Y = InitFiles()
-
     startTime = time.time()
-
+    start_memory = process_memory()
+    #print(start_memory)
     cost, X_Align, Y_Align = SequenceAlignment(X, Y)
-
+    end_memory = process_memory()
+    #print(end_memory)
     timeElapsed = (time.time() - startTime) * 1000
-    memory = process_memory()
-    Output(str(cost), X_Align, Y_Align, str(timeElapsed), str(memory))
-
+    memory_consumed = max((end_memory - start_memory), 0)
+    Output(str(cost), X_Align, Y_Align, str(timeElapsed), str(memory_consumed))
+    gc.enable()
