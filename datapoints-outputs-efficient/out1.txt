@@ -2,4 +2,4 @@
 CCAC_CAG_G
 _CATGCA_TG
 0.0
-4
+16

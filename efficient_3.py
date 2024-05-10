@@ -77,9 +77,9 @@ def Output(cost, X_Align, Y_Align, Time, Memory):
     file.write(X_Align + "\n")
     file.write(Y_Align + "\n")
     file.write(Time + "\n")
-    #print("CPU Time: " + str(Time))
+    #print("CPU: " + str(Time))
     file.write(Memory)
-    #print("Memory Consumed: " + str(memory_consumed))
+    #print("Memory: " + str(memory_consumed))
     file.close()
 
 def PrintOpt(OPT):

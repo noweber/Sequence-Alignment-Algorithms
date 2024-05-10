@@ -76,9 +76,9 @@ def Output(cost, X_Align, Y_Align, Time, Memory):
     file.write(X_Align + "\n")
     file.write(Y_Align + "\n")
     file.write(Time + "\n")
-    #print("CPU Time: " + str(Time))
+    #print("CPU: " + str(Time))
     file.write(Memory)
-    #print("Memory Consumed: " + str(memory_consumed))
+    #print("Memory: " + str(memory_consumed))
     file.close()
 
 def PrintOpt(OPT):
@@ -169,4 +169,5 @@ if __name__ == "__main__":
     timeElapsed = (time.time() - startTime) * 1000
     memory_consumed = max((end_memory - start_memory), 0)
     Output(str(cost), X_Align, Y_Align, str(timeElapsed), str(memory_consumed))
+    #Output(str(cost), X_Align, Y_Align, str(timeElapsed), str(end_memory))
     gc.enable()
