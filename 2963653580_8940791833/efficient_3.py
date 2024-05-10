@@ -192,7 +192,7 @@ def EfficientSequenceAlignment(X, Y):
     N = len(Y)
 
     # BASE CASES:
-    OPT = [[None for j in range(N+1)] for i in range(M+1)]
+    #OPT = [[None for j in range(N+1)] for i in range(M+1)]
     if M == 1 or N == 1:
         return BasicSequenceAlignment(X, Y)
     elif M == 0 and N != 0:
